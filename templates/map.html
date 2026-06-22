@@ -1,155 +1,238 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BC Prospect Map</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: Arial, sans-serif; background: #1a1a2e; color: #eee; height: 100vh; display: flex; flex-direction: column; }
-        header { background: #16213e; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #e94560; flex-shrink: 0; }
-        header h1 { font-size: 1.2rem; color: #e94560; }
-        header a { color: #aad4f5; text-decoration: none; font-size: 0.9rem; padding: 6px 12px; border: 1px solid #444; border-radius: 6px; }
-        header a:hover { background: #0f3460; }
-        .map-container { display: flex; flex: 1; overflow: hidden; }
-        #map { flex: 1; }
-        .sidebar { width: 280px; background: #16213e; padding: 16px; overflow-y: auto; flex-shrink: 0; border-left: 1px solid #2a2a4a; }
-        .sidebar h2 { color: #e94560; font-size: 1rem; margin-bottom: 12px; }
-        .search-form input { width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #444; background: #0f3460; color: #eee; font-size: 0.9rem; margin-bottom: 8px; }
-        .search-form button { width: 100%; padding: 8px; background: #e94560; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .search-form button:hover { background: #c73652; }
-        .result-card { background: #0f3460; border-radius: 8px; padding: 12px; margin-top: 16px; display: none; }
-        .result-card h3 { color: #e94560; font-size: 0.95rem; margin-bottom: 8px; }
-        .result-card ul { list-style: none; margin-bottom: 10px; }
-        .result-card ul li { padding: 4px 0; font-size: 0.85rem; color: #ccc; border-bottom: 1px solid #1a1a3e; }
-        .result-card .tip { font-size: 0.82rem; color: #aad4f5; font-style: italic; line-height: 1.4; }
-        .legend { margin-top: 20px; }
-        .legend h3 { color: #e94560; font-size: 0.9rem; margin-bottom: 10px; }
-        .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 0.82rem; color: #ccc; }
-        .legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
-        .dot-gold { background: #ffd700; }
-        .dot-mineral { background: #4caf50; }
-        .dot-rock { background: #9c27b0; }
-        .error { color: #e94560; font-size: 0.85rem; margin-top: 10px; }
-        .location-btn { width: 100%; padding: 6px; background: #16213e; color: #aad4f5; border: 1px solid #444; border-radius: 6px; cursor: pointer; margin-top: 8px; font-size: 0.85rem; }
-        .location-btn:hover { background: #0f3460; }
-        .coords-display { font-size: 0.75rem; color: #888; margin-top: 8px; text-align: center; }
-    </style>
-</head>
-<body>
-    <header>
-        <h1>BC Prospect Map</h1>
-        <a href="/">Back to Search</a>
-    </header>
+    <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>BC Prospect Map Helper</title>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <style>
+                    * { box-sizing: border-box; margin: 0; padding: 0; }
+                    body { font-family: Arial, sans-serif; background: #1a1a2e; color: #eee; height: 100vh; display: flex; flex-direction: column; }
+                    header { background: #16213e; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #e94560; flex-shrink: 0; }
+                    header h1 { font-size: 1.2rem; color: #e94560; }
+                    header span { font-size: 0.8rem; color: #aaa; }
+                    .map-container { display: flex; flex: 1; overflow: hidden; }
+                    #map { flex: 1; }
+                    .sidebar { width: 290px; background: #16213e; padding: 16px; overflow-y: auto; flex-shrink: 0; border-left: 1px solid #2a2a4a; display: flex; flex-direction: column; gap: 16px; }
+                    .sidebar h2 { color: #e94560; font-size: 1rem; margin-bottom: 8px; }
+                    .sidebar h3 { color: #e94560; font-size: 0.9rem; margin-bottom: 8px; }
+                    .search-form input[type="text"] { width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #444; background: #0f3460; color: #eee; font-size: 0.9rem; margin-bottom: 8px; }
+                    .search-form button { width: 100%; padding: 8px; background: #e94560; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.9rem; }
+                    .search-form button:hover { background: #c73652; }
+                    .result-card { background: #0f3460; border-radius: 8px; padding: 12px; display: none; }
+                    .result-card h3 { color: #e94560; font-size: 0.95rem; margin-bottom: 8px; }
+                    .result-card ul { list-style: none; margin-bottom: 10px; }
+                    .result-card ul li::before { content: "• "; color: #e94560; }
+                    .result-card ul li { padding: 4px 0; font-size: 0.85rem; color: #ccc; border-bottom: 1px solid #1a1a3e; }
+                    .result-card .tip { font-size: 0.82rem; color: #aad4f5; font-style: italic; line-height: 1.4; margin-bottom: 10px; }
+                    .section-box { background: #0f3460; border-radius: 8px; padding: 12px; }
+                    .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 0.82rem; color: #ccc; }
+                    .legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+                    .dot-gold { background: #ffd700; }
+                    .dot-mineral { background: #4caf50; }
+                    .dot-rock { background: #9c27b0; }
+                    .error { color: #e94560; font-size: 0.82rem; margin-top: 6px; }
+                    .success { color: #4caf50; font-size: 0.82rem; margin-top: 6px; }
+                    .action-btn { width: 100%; padding: 7px; background: #16213e; color: #aad4f5; border: 1px solid #444; border-radius: 6px; cursor: pointer; margin-top: 8px; font-size: 0.85rem; }
+                    .action-btn:hover { background: #0f3460; }
+                    .coords-display { font-size: 0.75rem; color: #888; text-align: center; }
+                    .upload-area { border: 2px dashed #444; border-radius: 6px; padding: 12px; text-align: center; color: #888; font-size: 0.82rem; }
+                    .upload-area input[type="file"] { display: block; margin: 8px auto 0; color: #ccc; font-size: 0.82rem; width: 100%; }
+                    .upload-btn { width: 100%; padding: 7px; background: #e94560; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.85rem; margin-top: 8px; }
+                    .upload-btn:hover { background: #c73652; }
+                    .imap-links a { display: block; color: #aad4f5; text-decoration: none; font-size: 0.82rem; padding: 4px 0; }
+                    .imap-links a:hover { color: #e94560; }
+                </style>
+    </head>
+    <body>
+        <header>
+                <h1>&#x26B0; BC Prospect Map Helper</h1>
+            <span>Offline/Online Prospecting &amp; Rockhounding &mdash; British Columbia</span>
+        </header>
     <div class="map-container">
-        <div id="map"></div>
+        <div id="map"></div>div>
         <div class="sidebar">
-            <h2>Search Location</h2>
-            <div class="search-form">
-                <input type="text" id="locInput" placeholder="Princeton, Oliver, Barkerville..." />
-                <button onclick="searchAndFly()">Search &amp; Fly To</button>
-            </div>
-            <div class="result-card" id="resultCard">
-                <h3 id="cardTitle"></h3>
-                <ul id="cardList"></ul>
-                <p class="tip" id="cardTip"></p>
-                <button class="location-btn" onclick="downloadMap()">Download Offline Package</button>
-            </div>
-            <p class="error" id="errorMsg"></p>
-            <div class="legend">
-                <h3>Map Legend</h3>
-                <div class="legend-item"><div class="legend-dot dot-gold"></div>Gold Placer Areas</div>
-                <div class="legend-item"><div class="legend-dot dot-mineral"></div>Mineral Claims</div>
-                <div class="legend-item"><div class="legend-dot dot-rock"></div>Rockhounding Sites</div>
-            </div>
-            <p class="coords-display" id="coordsDisplay">Click map for coordinates</p>
+        
+                <!-- Search -->
+                <div>
+                                <h2>Search Location</h2>
+                                <div class="search-form">
+                                                    <input type="text" id="locInput" placeholder="Princeton, Oliver, Barkerville..." />
+                                                    <button onclick="searchAndFly()">Search &amp; Fly To</button>button>
+                                </div>
+                                <p class="error" id="errorMsg"></p>p>
+                </div>
+
+                    <!-- Result card -->
+                    <div class="result-card" id="resultCard">
+                                    <h3 id="cardTitle"></h3>
+                                    <ul id="cardList"></ul>ul>
+                                    <p class="tip" id="cardTip"></p>p>
+                                    <button class="action-btn" onclick="downloadMap()">&#x2B07; Download Offline Package</button>button>
+                    </div>
+
+                    <!-- Upload Notes -->
+                    <div class="section-box">
+                                    <h3>&#x1F4C2; Upload Field Notes</h3>
+                                    <div class="upload-area">
+                                                        Drop a GPX/KML/CSV or text file
+                                                        <input type="file" id="notesFile" accept=".gpx,.kml,.csv,.txt,.json" />
+                                    </div>
+                                    <button class="upload-btn" onclick="uploadNotes()">Upload Notes</button>button>
+                                    <p id="uploadMsg"></p>p>
+                    </div>
+
+                    <!-- Legend -->
+                    <div class="section-box">
+                                    <h3>Map Legend</h3>
+                                    <div class="legend-item"><div class="legend-dot dot-gold"></div>Gold Placer Areas</div>
+                                    <div class="legend-item"><div class="legend-dot dot-mineral"></div>Mineral Claims</div>
+                                    <div class="legend-item"><div class="legend-dot dot-rock"></div>Rockhounding Sites</div>
+                    </div>
+
+                    <!-- Useful links -->
+                    <div class="section-box imap-links">
+                                    <h3>&#x1F517; Useful Resources</h3>
+                                    <a href="https://www2.gov.bc.ca/gov/content/industry/mineral-exploration-mining/mineral-titles/mto-imapbc" target="_blank">MTO / iMapBC Mineral Titles</a>a>
+                                    <a href="https://www.geologybc.com/" target="_blank">BC Geological Survey</a>a>
+                                    <a href="https://www.avenzamaps.com/" target="_blank">Avenza Maps (Offline)</a>a>
+                                    <a href="https://qgis.org/" target="_blank">QGIS (Free GIS Software)</a>a>
+                    </div>
+
+                    <p class="coords-display" id="coordsDisplay">Click map to show coordinates</p>p>
+
         </div>
     </div>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        var map = L.map('map').setView([54.0, -125.0], 6);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: 'OpenStreetMap contributors',
-            maxZoom: 18
-        }).addTo(map);
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <script>
+                // --- Map init ---
+                var map = L.map('map').setView([54.0, -125.0], 6);
 
-        // Offline fallback tile layer label
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
-            attribution: 'Esri World Topo',
-            opacity: 0
-        });
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '&copy; OpenStreetMap contributors',
+                            maxZoom: 18
+                }).addTo(map);
 
-        var markers = [];
-        var currentLocation = '';
+                // --- Known BC prospecting sites ---
+                var knownSites = [
+                    {name:'Princeton',   lat:49.46,  lon:-120.51, type:'gold',    label:'Gold/Garnet (Tulameen River)'},
+                    {name:'Oliver',      lat:49.18,  lon:-119.55, type:'mineral', label:'Mineral (South Okanagan)'},
+                    {name:'Barkerville', lat:53.07,  lon:-121.52, type:'gold',    label:'Historic Gold (Cariboo)'},
+                    {name:'Likely',      lat:52.6,   lon:-121.55, type:'gold',    label:'Placer Gold (Quesnel River)'},
+                    {name:'Rock Creek',  lat:49.03,  lon:-119.0,  type:'gold',    label:'Placer Gold (Kettle River)'},
+                    {name:'Clearwater',  lat:51.64,  lon:-120.03, type:'rock',    label:'Rockhounding (Wells Gray)'},
+                    {name:'Hope',        lat:49.38,  lon:-121.44, type:'mineral', label:'Jade/Mineral (Fraser River)'},
+                        ];
 
-        // Sample known BC prospecting sites
-        var knownSites = [
-            {name:'Princeton', lat:49.46, lon:-120.51, type:'gold', label:'Gold/Garnet'},
-            {name:'Oliver', lat:49.18, lon:-119.55, type:'mineral', label:'Mineral'},
-            {name:'Barkerville', lat:53.07, lon:-121.52, type:'gold', label:'Historic Gold'},
-            {name:'Likely', lat:52.6, lon:-121.55, type:'gold', label:'Placer Gold'},
-            {name:'Rock Creek', lat:49.03, lon:-119.0, type:'gold', label:'Placer Gold'},
-            {name:'Clearwater', lat:51.64, lon:-120.03, type:'rock', label:'Rockhounding'},
-            {name:'Hope', lat:49.38, lon:-121.44, type:'mineral', label:'Jade/Mineral'},
-        ];
+                var dotColors = {gold:'#ffd700', mineral:'#4caf50', rock:'#9c27b0'};
+                var markers = [];
+                var currentLocation = '';
 
-        var dotColors = {gold:'#ffd700', mineral:'#4caf50', rock:'#9c27b0'};
+                knownSites.forEach(function(site) {
+                            var circle = L.circleMarker([site.lat, site.lon], {
+                                            radius: 9,
+                                            fillColor: dotColors[site.type] || '#e94560',
+                                            color: '#fff',
+                                            weight: 2,
+                                            opacity: 1,
+                                            fillOpacity: 0.85
+                            }).addTo(map);
+                            circle.bindPopup('<strong>' + site.name + '</strong><br>' + site.label);
+                });
 
-        knownSites.forEach(function(site) {
-            var circle = L.circleMarker([site.lat, site.lon], {
-                radius: 8,
-                fillColor: dotColors[site.type] || '#e94560',
-                color: '#fff',
-                weight: 2,
-                opacity: 1,
-                fillOpacity: 0.85
-            }).addTo(map);
-            circle.bindPopup('<strong>' + site.name + '</strong><br>' + site.label);
-            markers.push(circle);
-        });
+                // --- Click coords ---
+                map.on('click', function(e) {
+                            document.getElementById('coordsDisplay').textContent =
+                                            'Lat: ' + e.latlng.lat.toFixed(5) + ' | Lon: ' + e.latlng.lng.toFixed(5);
+                });
 
-        map.on('click', function(e) {
-            document.getElementById('coordsDisplay').textContent =
-                'Lat: ' + e.latlng.lat.toFixed(5) + ' | Lon: ' + e.latlng.lng.toFixed(5);
-        });
+                // --- Search & fly ---
+                async function searchAndFly() {
+                            var loc = document.getElementById('locInput').value.trim();
+                            if (!loc) return;
+                            currentLocation = loc;
+                            document.getElementById('errorMsg').textContent = '';
+                            var fd = new FormData();
+                            fd.append('location', loc);
+                            try {
+                                            var res = await fetch('/search', {method: 'POST', body: fd});
+                                            if (!res.ok) throw new Error('Server error');
+                                            var data = await res.json();
+                                            map.flyTo([data.coords[0], data.coords[1]], 11, {duration: 1.5});
+                                            var mk = L.marker([data.coords[0], data.coords[1]])
+                                                .addTo(map)
+                                                .bindPopup('<strong>' + data.location + '</strong>').openPopup();
+                                            markers.push(mk);
+                                            document.getElementById('cardTitle').textContent = data.location;
+                                            document.getElementById('cardList').innerHTML =
+                                                                data.indicators.map(function(i) { return '<li>' + i + '</li>'; }).join('');
+                                            document.getElementById('cardTip').textContent = data.tips;
+                                            document.getElementById('resultCard').style.display = 'block';
+                            } catch(e) {
+                                            document.getElementById('errorMsg').textContent = 'Error searching. Is the server running?';
+                            }
+                }
 
-        async function searchAndFly() {
-            var loc = document.getElementById('locInput').value.trim();
-            if (!loc) return;
-            currentLocation = loc;
-            document.getElementById('errorMsg').textContent = '';
-            var fd = new FormData(); fd.append('location', loc);
-            try {
-                var res = await fetch('/search', {method:'POST', body:fd});
-                var data = await res.json();
-                map.flyTo([data.coords[0], data.coords[1]], 11, {duration: 1.5});
-                var mk = L.marker([data.coords[0], data.coords[1]])
-                    .addTo(map)
-                    .bindPopup('<strong>' + data.location + '</strong>').openPopup();
-                markers.push(mk);
-                document.getElementById('cardTitle').textContent = data.location;
-                document.getElementById('cardList').innerHTML =
-                    data.indicators.map(function(i){return '<li>'+i+'</li>';}).join('');
-                document.getElementById('cardTip').textContent = data.tips;
-                document.getElementById('resultCard').style.display = 'block';
-            } catch(e) {
-                document.getElementById('errorMsg').textContent = 'Error searching. Is the server running?';
-            }
-        }
+                // --- Download offline package ---
+                async function downloadMap() {
+                            var fd = new FormData();
+                            fd.append('location', currentLocation || 'Princeton');
+                            try {
+                                            var res = await fetch('/download_map', {method: 'POST', body: fd});
+                                            if (!res.ok) throw new Error('Download failed');
+                                            var blob = await res.blob();
+                                            var url = window.URL.createObjectURL(blob);
+                                            var a = document.createElement('a');
+                                            a.href = url;
+                                            a.download = (currentLocation || 'Princeton') + '_prospect_map.txt';
+                                            a.click();
+                                            window.URL.revokeObjectURL(url);
+                            } catch(e) {
+                                            document.getElementById('errorMsg').textContent = 'Download failed. Try again.';
+                            }
+                }
 
-        async function downloadMap() {
-            var fd = new FormData(); fd.append('location', currentLocation||'Princeton');
-            var res = await fetch('/download_map',{method:'POST',body:fd});
-            var blob = await res.blob();
-            var url = window.URL.createObjectURL(blob);
-            var a = document.createElement('a'); a.href=url; a.download=(currentLocation||'Princeton')+'_prospect_map.txt'; a.click();
-        }
+                // --- Upload field notes ---
+                async function uploadNotes() {
+                            var fileInput = document.getElementById('notesFile');
+                            var msgEl = document.getElementById('uploadMsg');
+                            msgEl.textContent = '';
+                            msgEl.className = '';
+                            if (!fileInput.files.length) {
+                                            msgEl.textContent = 'Please select a file first.';
+                                            msgEl.className = 'error';
+                                            return;
+                            }
+                            var fd = new FormData();
+                            fd.append('file', fileInput.files[0]);
+                            try {
+                                            var res = await fetch('/upload_notes', {method: 'POST', body: fd});
+                                            var data = await res.json();
+                                            if (res.ok) {
+                                                                msgEl.textContent = data.message;
+                                                                msgEl.className = 'success';
+                                                                fileInput.value = '';
+                                            } else {
+                                                                msgEl.textContent = data.error || 'Upload failed.';
+                                                                msgEl.className = 'error';
+                                            }
+                            } catch(e) {
+                                            msgEl.textContent = 'Upload error. Is the server running?';
+                                            msgEl.className = 'error';
+                            }
+                }
 
-        document.getElementById('locInput').addEventListener('keypress', function(e){
-            if(e.key==='Enter') searchAndFly();
-        });
-    </script>
-</body>
-</html>
+                // --- Enter key triggers search ---
+                document.getElementById('locInput').addEventListener('keypress', function(e) {
+                            if (e.key === 'Enter') searchAndFly();
+                });
+        </script>
+    </body>
+</html>html>
+        </script>
+                </div></span></h1>
+        </header>
+    </body>
+        </style></title>
+    </head>
